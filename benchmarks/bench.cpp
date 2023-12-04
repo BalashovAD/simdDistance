@@ -28,8 +28,8 @@ static void BM_process(benchmark::State& state, Fn fn, Challenge challenge) {
     state.SetItemsProcessed(static_cast<int64_t>(challenge.size() * state.iterations()));
 }
 
-static constexpr auto L1_CACHE_SIZE = 32 * 1024;
-static constexpr auto LOAD_TEST_SIZE = L1_CACHE_SIZE * 8;
+//static constexpr auto L1_CACHE_SIZE = 32 * 1024;
+//static constexpr auto LOAD_TEST_SIZE = L1_CACHE_SIZE * 8;
 
 std::vector<bool> wrapperBool(std::string const& v) {
     std::vector<bool> vec; vec.reserve(v.size());
@@ -78,7 +78,7 @@ BENCHMARK_CAPTURE(BM_process, RR_120_ ## name, fn, wrapper(INF_CHALLENGE_RR));
 
 DEF_BENCH(Slow, distanceSlow, wrapperBool);
 DEF_BENCH(Uint, distanceUintSlow, wrapperUint);
-DEF_BENCH(Memoized, distanceMemoized, wrapperCustomBool);
+DEF_BENCH(MemoizedS, distanceMemoized, wrapperCustomBool);
 DEF_BENCH(MemoizedBranchLess, distanceMemoizedBranchLess, wrapperCustomBool);
 
 

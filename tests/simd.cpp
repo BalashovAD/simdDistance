@@ -10,9 +10,10 @@ constexpr std::array<uint8_t, 256> createArray() {
     return arr;
 }
 
+#ifdef __AVX512F__
+
 constexpr std::array<uint8_t, 256> lookupTable = createArray();
 
-#ifdef __AVX512F__
 
 TEST(SIMD_lookup, Base) {
 

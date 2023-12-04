@@ -1,6 +1,6 @@
 #pragma once
 
-#include <intrin.h>
+#include <immintrin.h>
 #include <array>
 #include <cstdint>
 

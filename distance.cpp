@@ -5,6 +5,7 @@
 #include <cassert>
 #include <array>
 #include <iostream>
+#include <tuple>
 
 
 void distanceSlow(std::vector<bool>& input) {
@@ -67,7 +68,11 @@ void distanceUintSlow(std::vector<uint8_t>& input) {
 }
 
 
-constexpr std::tuple<uint8_t, uint8_t, uint8_t> analyzeBits(uint8_t value) {
+struct alignas(16) MemoizedData {
+    uint8_t l, m, r;
+};
+
+constexpr MemoizedData analyzeBits(uint8_t value) {
     assert(value != 0);
     uint8_t firstOne = 0, longestZero = 0, lastOne = 0;
     uint8_t currentZero = 0;
@@ -89,13 +94,13 @@ constexpr std::tuple<uint8_t, uint8_t, uint8_t> analyzeBits(uint8_t value) {
         }
     }
 
-    return {firstOne, longestZero, 7 - lastOne};
+    return {firstOne, longestZero, static_cast<uint8_t>(7 - lastOne)};
 }
 
 static constexpr auto UINT8_SIZE = (1 << 8) - 1;
 
 constexpr auto gen(){
-    std::array<std::tuple<uint8_t, uint8_t, uint8_t>, UINT8_SIZE + 1> out{};
+    std::array<MemoizedData, UINT8_SIZE + 1> out{};
     out[0] = {8, 8, 8};
     for (uint8_t i = UINT8_SIZE; i != 0; --i) {
         out[i] = analyzeBits(i);
@@ -104,7 +109,7 @@ constexpr auto gen(){
 };
 
 // return prefix seq, internal seq, suffix seq
-std::tuple<uint8_t, uint8_t, uint8_t> process8(uint8_t n) {
+decltype(auto) process8(uint8_t n) {
     static constexpr auto cached = gen();
     return cached[n];
 }
@@ -212,11 +217,11 @@ void distanceMemoizedBranchLess(BoolVector& input) {
 
     static constexpr uint32_t IN_CHUNK_BIT = (1ull << 31);
     for (auto i = 0u; i != chunks; ++i) {
-        auto [np, longest, ns] = process8(input.rawData()[i]);
+        auto const& [np, longest, ns] = process8(input.rawData()[i]);
 
         auto leftValue = np + current;
 
-        using StateT = std::tuple<uint32_t, uint32_t, uint32_t>;
+        using StateT = std::array<uint32_t, 3>;
         StateT all{current + 8, longestSeqSize, longestSeqPos};
         StateT noChanges{ns, longestSeqSize, longestSeqPos};
         StateT leftUpdate{ns, leftValue, i * 8 - current};
@@ -227,8 +232,12 @@ void distanceMemoizedBranchLess(BoolVector& input) {
         auto hasOnes = np != 8;
         auto leftTrigger = np + current > longestSeqSize;
         auto triggerInside = longest > longestSeqSize && longest > np + current;
-        std::tie(current, longestSeqSize, longestSeqPos)
-            = results[hasOnes * (1 + leftTrigger + triggerInside * 2)];
+//        std::tie(current, longestSeqSize, longestSeqPos)
+//            = results[hasOnes * (1 + leftTrigger + triggerInside * 2)];
+        auto const& a = results[hasOnes * (1 + leftTrigger + triggerInside * 2)];
+        current = a[0];
+        longestSeqSize = a[1];
+        longestSeqPos = a[2];
     }
 
     if (size % 8 != 0) {
