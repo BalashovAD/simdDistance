@@ -57,13 +57,13 @@ std::vector<uint8_t> wrapperUint(std::string const& v) {
 
 static inline std::string MID_CHALLENGE = random(45);
 static inline std::string MID_CHALLENGE_R = random(45, 0.2);
-static inline std::string LONG1_CHALLENGE = random(16 * 80 + 5); // 1285 = 1 Kb
-static inline std::string LONG1_CHALLENGE_R = random(16 * 80 + 5, 0.2); // 1285 = 1 Kb
-static inline std::string LONG30_CHALLENGE = random(1024 * 30 + 11); // 30 Kb
-static inline std::string LONG30_CHALLENGE_R = random(1024 * 30 + 11, 0.2); // 30 Kb
-static inline std::string INF_CHALLENGE = random(1024 * 120); // 120 Kb
-static inline std::string INF_CHALLENGE_R = random(1024 * 120, 0.2); // 120 Kb
-static inline std::string INF_CHALLENGE_RR = random(1024 * 120, 0.05); // 120 Kb
+static inline std::string LONG1_CHALLENGE = random(8 * 16 * 80 + 5); // 1285 = 1 Kb
+static inline std::string LONG1_CHALLENGE_R = random(8 * 16 * 80 + 5, 0.2); // 1285 = 1 Kb
+static inline std::string LONG30_CHALLENGE = random(8 * 1024 * 30 + 11); // 30 Kb
+static inline std::string LONG30_CHALLENGE_R = random(8 * 1024 * 30 + 11, 0.2); // 30 Kb
+static inline std::string INF_CHALLENGE = random(8 * 1024 * 120); // 120 Kb
+static inline std::string INF_CHALLENGE_R = random(8 * 1024 * 120, 0.2); // 120 Kb
+static inline std::string INF_CHALLENGE_RR = random(8 * 1024 * 120, 0.05); // 120 Kb
 
 #define DEF_BENCH(name, fn, wrapper) \
 BENCHMARK_CAPTURE(BM_process, EQ_0_ ## name, fn, wrapper(MID_CHALLENGE)); \
@@ -77,8 +77,10 @@ BENCHMARK_CAPTURE(BM_process, R_120_ ## name, fn, wrapper(INF_CHALLENGE_R)); \
 BENCHMARK_CAPTURE(BM_process, RR_120_ ## name, fn, wrapper(INF_CHALLENGE_RR));
 
 DEF_BENCH(Slow, distanceSlow, wrapperBool);
-DEF_BENCH(Uint, distanceUintSlow, wrapperUint);
+DEF_BENCH(UintS, distanceUintSlow, wrapperUint);
+DEF_BENCH(UintBranchLess, distanceUintSlowBranchLess, wrapperUint);
 DEF_BENCH(MemoizedS, distanceMemoized, wrapperCustomBool);
+DEF_BENCH(MemoizedSAligned, distanceMemoizedAligned, wrapperCustomBool);
 DEF_BENCH(MemoizedBranchLess, distanceMemoizedBranchLess, wrapperCustomBool);
 
 

@@ -10,6 +10,8 @@ void distanceSlow(std::vector<bool>& input);
 
 void distanceUintSlow(std::vector<uint8_t>& input);
 
+void distanceUintSlowBranchLess(std::vector<uint8_t>& input);
+
 class BoolVector {
 public:
     explicit BoolVector(size_t size)
@@ -54,15 +56,16 @@ private:
     size_t m_size;
     std::vector<uint8_t> m_data;
 
-    void checkRange(size_t index) const {
+    void checkRange(size_t index) const noexcept {
         if (index >= size()) {
-            throw std::out_of_range("Index out of range");
+//            throw std::out_of_range("Index out of range");
         }
     }
 };
 
 
 void distanceMemoized(BoolVector& input);
+void distanceMemoizedAligned(BoolVector& input);
 
 void distanceMemoizedBranchLess(BoolVector& input);
 

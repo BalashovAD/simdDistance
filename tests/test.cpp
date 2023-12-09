@@ -54,7 +54,9 @@ struct WrapperCustomBool {
 
 using SlowT = WrapperVectorBool<distanceSlow>;
 using SlowUintT = WrapperVector<distanceUintSlow>;
+using SlowUintBranchLessT = WrapperVector<distanceUintSlowBranchLess>;
 using MemoizedT = WrapperCustomBool<distanceMemoized>;
+using MemoizedAlignedT = WrapperCustomBool<distanceMemoizedAligned>;
 using MemoizedBranchLessT = WrapperCustomBool<distanceMemoizedBranchLess>;
 
 template <typename Fn>
@@ -153,7 +155,9 @@ REGISTER_TYPED_TEST_SUITE_P(DistanceTest, Tests, Big, Random);
 
 INSTANTIATE_TYPED_TEST_SUITE_P(Slow, DistanceTest, SlowT);
 INSTANTIATE_TYPED_TEST_SUITE_P(SlowUint, DistanceTest, SlowUintT);
+INSTANTIATE_TYPED_TEST_SUITE_P(SlowUintBranchLess, DistanceTest, SlowUintBranchLessT);
 INSTANTIATE_TYPED_TEST_SUITE_P(Memoized, DistanceTest, MemoizedT);
+INSTANTIATE_TYPED_TEST_SUITE_P(MemoizedAlign, DistanceTest, MemoizedAlignedT);
 INSTANTIATE_TYPED_TEST_SUITE_P(MemoizedBranchLess, DistanceTest, MemoizedBranchLessT);
 
 

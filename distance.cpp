@@ -68,6 +68,42 @@ void distanceUintSlow(std::vector<uint8_t>& input) {
 }
 
 
+void distanceUintSlowBranchLess(std::vector<uint8_t>& input) {
+    assert(!input.empty());
+
+    uint32_t longestSeqSize = 0;
+    uint32_t longestSeqPos = 0;
+
+    uint32_t currentSeqSize = 0;
+    for (auto i = 0u; i != input.size(); ++i) {
+        using StateT = std::array<uint32_t, 3>;
+
+        StateT zero{currentSeqSize + 1, longestSeqSize, longestSeqPos};
+        StateT oneNonUpdate{0, longestSeqSize, longestSeqPos};
+        StateT oneUpdate{0, currentSeqSize, i - currentSeqSize};
+
+        std::array<StateT, 3> results{zero, oneNonUpdate, oneUpdate};
+
+        auto t = input[i];
+        bool isOne = t == 1;
+        bool needUpdate = longestSeqSize < currentSeqSize;
+        auto const& res = results[isOne * (1 + needUpdate)];
+
+        currentSeqSize = res[0];
+        longestSeqSize = res[1];
+        longestSeqPos = res[2];
+    }
+
+    if (longestSeqSize < currentSeqSize) {
+        input.back() = true;
+    } else if (longestSeqPos == 0) {
+        input[longestSeqPos] = true;
+    } else {
+        input[longestSeqPos + longestSeqSize / 2] = true;
+    }
+}
+
+
 struct alignas(16) MemoizedData {
     uint8_t l, m, r;
 };
@@ -99,7 +135,7 @@ constexpr MemoizedData analyzeBits(uint8_t value) {
 
 static constexpr auto UINT8_SIZE = (1 << 8) - 1;
 
-constexpr auto gen(){
+constexpr auto gen() {
     std::array<MemoizedData, UINT8_SIZE + 1> out{};
     out[0] = {8, 8, 8};
     for (uint8_t i = UINT8_SIZE; i != 0; --i) {
@@ -273,6 +309,78 @@ void distanceMemoizedBranchLess(BoolVector& input) {
     }
 }
 
+#pragma GCC push_options
+#pragma GCC optimize("align-loops=128")
+void distanceMemoizedAligned(BoolVector& input) {
+    auto const size = input.size();
+    auto const chunks = input.fullChunks();
+
+    size_t current = 0;
+    size_t longestSeqSize = 0;
+    size_t longestSeqPos = 0;
+    bool inChunk = false;
+
+    for (auto i = 0u; i != chunks; ++i) {
+        auto [np, longest, ns] = process8(input.rawData()[i]);
+        if (np == 8) {
+            current += 8;
+        } else {
+            auto lp = np + current;
+            if (lp > longestSeqSize) [[unlikely]] {
+                longestSeqSize = lp;
+                assert(i * 8 + np >= longestSeqSize);
+                longestSeqPos = i * 8 + np - longestSeqSize;
+                inChunk = false;
+            }
+            if (longest > longestSeqSize) [[unlikely]] {
+                inChunk = true;
+                longestSeqSize = longest;
+                longestSeqPos = i * 8;
+            }
+            current = ns;
+        }
+    }
+
+    if (size % 8 != 0) {
+        for (auto j = chunks * 8; j != size; ++j) {
+            auto t = input.get(j);
+            if (t == 1) {
+                if (longestSeqSize < current) {
+                    longestSeqSize = current;
+                    assert(j >= current);
+                    longestSeqPos = j - current;
+                    inChunk = false;
+                }
+                current = 0;
+            } else {
+                ++current;
+            }
+        }
+    }
+
+    if (longestSeqSize < current) {
+        assert(input.get(size - 1) == false);
+        input.set(size - 1, true);
+//        std::cout << "end:" << longestSeqSize << std::endl;
+    } else if (longestSeqPos == 0) {
+        if (!inChunk) {
+            assert(input.get(0) == false || longestSeqSize == 0);
+            input.set(0, true);
+//            std::cout << "0:" << longestSeqSize << std::endl;
+        } else {
+            findInChunk(input, longestSeqPos);
+        }
+    } else {
+        if (!inChunk) {
+            assert(input.get(longestSeqPos + longestSeqSize / 2) == false);
+            input.set(longestSeqPos + longestSeqSize / 2, true);
+            //std::cout << "mid:" << longestSeqSize << std::endl;
+        } else {
+            findInChunk(input, longestSeqPos);
+        }
+    }
+}
+#pragma GCC pop_options
 
 template <size_t Ind> requires(Ind < 3)
 constexpr auto genSingle(){

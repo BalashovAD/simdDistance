@@ -4,7 +4,7 @@
 #include <array>
 #include <cstdint>
 
-#ifdef __AVX512F__
+#ifdef AVX512F
 
 static constexpr auto TABLE_SIZE = 256;
 
@@ -43,6 +43,31 @@ inline __m512i blend(__m512i a, __m512i b, __mmask64 mask) {
     auto fixedResult3 = blend(fixedResult2, result4, select4);
 
     return fixedResult3;
+}
+
+
+namespace {
+
+inline __m256i blend(__m256i a, __m256i b, __mmask32 mask) {
+    return _mm256_mask_blend_epi8(mask, a, b);
+}
+
+}
+
+template <size_t TABLE_SIZE>
+[[gnu::always_inline]] inline __m256i shuffle(__m256i src, std::array<uint8_t, TABLE_SIZE> lookupTable) {
+    static constexpr auto REG_SIZE = 32;
+    auto resultReg = _mm256_set1_epi8(0);
+
+    for (auto i = 0u; i != TABLE_SIZE / REG_SIZE; ++i) {
+        auto tableReg = _mm256_load_epi64(lookupTable.data() + i * REG_SIZE);
+        auto resultTmpReg = _mm256_shuffle_epi8(tableReg, src);
+        auto borderReg = _mm256_set1_epi8(i * REG_SIZE);
+        auto selectReg = _mm256_cmpge_epi8_mask(src, borderReg);
+        resultReg = blend(resultReg, resultTmpReg, selectReg);
+    }
+
+    return resultReg;
 }
 
 #endif

@@ -6,8 +6,9 @@ set(CMAKE_CXX_STANDARD 20)
 option(ENABLE_AVX "ENABLE_AVX" OFF)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wno-error=old-style-cast -Wall -march=native -mavx -mavx2")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast")
 add_compile_options(-g3)
+#add_compile_options(-falign-loops=63)
 
 include(CheckCXXCompilerFlag)
 enable_language(CXX)
@@ -18,6 +19,8 @@ if (${COMPILER_SUPPORTS_AVX512F} AND ${COMPILER_SUPPORTS_AVX512F} AND ${ENABLE_A
     message(STATUS "Support AVX+")
     add_compile_options(-mavx512f)
     add_compile_options(-mavx512bw)
+    add_compile_options(-mavx512vl)
+    add_compile_options(-DAVX512F)
 endif()
 
 file(GLOB LIB_SOURCES
