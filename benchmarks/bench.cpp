@@ -80,7 +80,7 @@ DEF_BENCH(Slow, distanceSlow, wrapperBool);
 DEF_BENCH(UintS, distanceUintSlow, wrapperUint);
 DEF_BENCH(UintBranchLess, distanceUintSlowBranchLess, wrapperUint);
 DEF_BENCH(MemoizedS, distanceMemoized, wrapperCustomBool);
-DEF_BENCH(MemoizedSAligned, distanceMemoizedAligned, wrapperCustomBool);
+DEF_BENCH(MemoizedAligned, distanceMemoizedAligned, wrapperCustomBool);
 DEF_BENCH(MemoizedBranchLess, distanceMemoizedBranchLess, wrapperCustomBool);
 
 

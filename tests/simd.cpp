@@ -9,6 +9,8 @@ constexpr std::array<uint8_t, 256> createArray() {
     }
     return arr;
 }
+
+[[maybe_unused]]
 constexpr std::array<uint8_t, 256> lookupTable = createArray();
 
 #ifdef AVX512F

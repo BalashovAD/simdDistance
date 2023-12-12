@@ -1,7 +1,5 @@
 #include "distance.hpp"
 
-#include "simd.hpp"
-
 #include <cassert>
 #include <array>
 #include <iostream>
@@ -309,8 +307,13 @@ void distanceMemoizedBranchLess(BoolVector& input) {
     }
 }
 
+#if __has_cpp_attribute(clang::code_align)
+#define CODE_ALIGN [[clang::code_align(64)]]
+#else
+#define CODE_ALIGN
 #pragma GCC push_options
 #pragma GCC optimize("align-loops=128")
+#endif
 void distanceMemoizedAligned(BoolVector& input) {
     auto const size = input.size();
     auto const chunks = input.fullChunks();
@@ -320,7 +323,7 @@ void distanceMemoizedAligned(BoolVector& input) {
     size_t longestSeqPos = 0;
     bool inChunk = false;
 
-    for (auto i = 0u; i != chunks; ++i) {
+    CODE_ALIGN for (auto i = 0u; i != chunks; ++i) {
         auto [np, longest, ns] = process8(input.rawData()[i]);
         if (np == 8) {
             current += 8;
@@ -380,7 +383,6 @@ void distanceMemoizedAligned(BoolVector& input) {
         }
     }
 }
-#pragma GCC pop_options
 
 template <size_t Ind> requires(Ind < 3)
 constexpr auto genSingle(){
@@ -391,6 +393,9 @@ constexpr auto genSingle(){
     }
     return out;
 };
+#if !__has_cpp_attribute(clang::code_align)
+#pragma GCC pop_options
+#endif
 
 
 #ifdef __AVX512F__
