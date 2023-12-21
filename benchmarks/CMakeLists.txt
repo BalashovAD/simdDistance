@@ -16,3 +16,8 @@ target_include_directories(bench PRIVATE
         ${BENCHMARK_DIR}/include)
 
 target_link_libraries(bench ${BENCHMARK_LIBRARIES})
+
+if(${ENABLE_HUGEPAGES})
+    message(STATUS "Add -B/hugetlbfs")
+    target_link_options(bench PRIVATE "-B/hugetlbfs")
+endif ()

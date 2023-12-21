@@ -4,11 +4,12 @@ project(distance)
 set(CMAKE_CXX_STANDARD 20)
 
 option(ENABLE_AVX "ENABLE_AVX" OFF)
+option(ENABLE_HUGEPAGES "Huge pages" ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wno-error=old-style-cast -Wall -march=native -mavx -mavx2")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast")
 add_compile_options(-g3)
-#add_compile_options(-falign-loops=63)
+add_compile_options(-Wno-deprecated-declarations) # disable for gtest + clang18
 
 include(CheckCXXCompilerFlag)
 enable_language(CXX)
