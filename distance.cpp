@@ -103,12 +103,11 @@ void distanceUintSlowBranchLess(std::vector<uint8_t>& input) {
     }
 }
 
-
 struct alignas(16) MemoizedData {
     uint8_t l, m, r;
 };
 
-constexpr MemoizedData analyzeBits(uint8_t value) {
+consteval MemoizedData analyzeBits(uint8_t value) {
     assert(value != 0);
     uint8_t firstOne = 0, longestZero = 0, lastOne = 0;
     uint8_t currentZero = 0;
@@ -135,7 +134,7 @@ constexpr MemoizedData analyzeBits(uint8_t value) {
 
 static constexpr auto UINT8_SIZE = (1 << 8) - 1;
 
-constexpr auto gen() {
+consteval auto gen() {
     std::array<MemoizedData, UINT8_SIZE + 1> out{};
     out[0] = {8, 8, 8};
     for (uint8_t i = UINT8_SIZE; i != 0; --i) {
@@ -223,12 +222,10 @@ void distanceMemoized(BoolVector& input) {
     if (longestSeqSize < current) {
         assert(input.get(size - 1) == false);
         input.set(size - 1, true);
-//        std::cout << "end:" << longestSeqSize << std::endl;
     } else if (longestSeqPos == 0) {
         if (!inChunk) {
             assert(input.get(0) == false || longestSeqSize == 0);
             input.set(0, true);
-//            std::cout << "0:" << longestSeqSize << std::endl;
         } else {
             findInChunk(input, longestSeqPos);
         }
@@ -236,7 +233,6 @@ void distanceMemoized(BoolVector& input) {
         if (!inChunk) {
             assert(input.get(longestSeqPos + longestSeqSize / 2) == false);
             input.set(longestSeqPos + longestSeqSize / 2, true);
-            //std::cout << "mid:" << longestSeqSize << std::endl;
         } else {
             findInChunk(input, longestSeqPos);
         }
@@ -257,7 +253,7 @@ void distanceMemoizedBranchLess(BoolVector& input) {
 
         auto leftValue = np + current;
 
-        using StateT = std::array<uint32_t, 3>;
+        using StateT = std::tuple<uint32_t, uint32_t, uint32_t>;
         StateT all{current + 8, longestSeqSize, longestSeqPos};
         StateT noChanges{ns, longestSeqSize, longestSeqPos};
         StateT leftUpdate{ns, leftValue, i * 8 - current};
@@ -268,12 +264,8 @@ void distanceMemoizedBranchLess(BoolVector& input) {
         auto hasOnes = np != 8;
         auto leftTrigger = np + current > longestSeqSize;
         auto triggerInside = longest > longestSeqSize && longest > np + current;
-//        std::tie(current, longestSeqSize, longestSeqPos)
-//            = results[hasOnes * (1 + leftTrigger + triggerInside * 2)];
-        auto const& a = results[hasOnes * (1 + leftTrigger + triggerInside * 2)];
-        current = a[0];
-        longestSeqSize = a[1];
-        longestSeqPos = a[2];
+        std::tie(current, longestSeqSize, longestSeqPos)
+            = results[hasOnes * (1 + leftTrigger + triggerInside * 2)];
     }
 
     if (size % 8 != 0) {
@@ -313,6 +305,7 @@ void distanceMemoizedBranchLess(BoolVector& input) {
 #pragma GCC optimize("align-loops=128")
 void distanceMemoizedAligned(BoolVector& input) {
     auto const size = input.size();
+    assert(size > 0);
     auto const chunks = input.fullChunks();
 
     size_t current = 0;
@@ -361,12 +354,10 @@ void distanceMemoizedAligned(BoolVector& input) {
     if (longestSeqSize < current) {
         assert(input.get(size - 1) == false);
         input.set(size - 1, true);
-//        std::cout << "end:" << longestSeqSize << std::endl;
     } else if (longestSeqPos == 0) {
         if (!inChunk) {
             assert(input.get(0) == false || longestSeqSize == 0);
             input.set(0, true);
-//            std::cout << "0:" << longestSeqSize << std::endl;
         } else {
             findInChunk(input, longestSeqPos);
         }
@@ -374,7 +365,6 @@ void distanceMemoizedAligned(BoolVector& input) {
         if (!inChunk) {
             assert(input.get(longestSeqPos + longestSeqSize / 2) == false);
             input.set(longestSeqPos + longestSeqSize / 2, true);
-            //std::cout << "mid:" << longestSeqSize << std::endl;
         } else {
             findInChunk(input, longestSeqPos);
         }
