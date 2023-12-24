@@ -106,7 +106,7 @@ struct alignas(16) MemoizedData {
 };
 
 consteval MemoizedData analyzeBits(uint8_t value) {
-    assert(value != 0);
+    assert(value != 0); // we use fixed value for 0 as {8, 8, 8}
     uint8_t firstOne = 0, longestZero = 0, lastOne = 0;
     uint8_t currentZero = 0;
     bool foundOne = false;
